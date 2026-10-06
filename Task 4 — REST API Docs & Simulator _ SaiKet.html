@@ -1,0 +1,371 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8"/>
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover"/>
+  <title>Task 4 — REST API | SaiKet Internship</title>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&family=Space+Grotesk:wght@600;700;800&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet"/>
+  <style>
+    :root { box-sizing:border-box; padding-top:env(safe-area-inset-top,0px); padding-bottom:env(safe-area-inset-bottom,0px); }
+    *{box-sizing:border-box;margin:0;padding:0;}
+    body{font-family:'Inter',sans-serif;background:#070d1a;color:#e2e8f0;min-height:100vh;}
+    h1,h2,h3{font-family:'Space Grotesk',sans-serif;}
+    code,pre,.mono{font-family:'JetBrains Mono',monospace;}
+    ::-webkit-scrollbar{width:5px;height:5px;}
+    ::-webkit-scrollbar-thumb{background:rgba(99,102,241,0.3);border-radius:3px;}
+
+    nav{position:sticky;top:env(safe-area-inset-top,0px);z-index:100;background:rgba(7,13,26,0.97);backdrop-filter:blur(16px);border-bottom:1px solid rgba(99,102,241,0.12);padding:0 24px;}
+    .nav-inner{max-width:1100px;margin:auto;height:60px;display:flex;align-items:center;justify-content:space-between;}
+
+    .hero{background:linear-gradient(135deg,#070d1a,#0f1a35,#070d1a);padding:80px 24px;text-align:center;}
+    .badge{display:inline-flex;align-items:center;gap:8px;background:rgba(99,102,241,0.1);border:1px solid rgba(99,102,241,0.25);border-radius:50px;padding:6px 16px;font-size:12px;color:#a5b4fc;margin-bottom:20px;}
+
+    .endpoint-card{background:rgba(15,22,40,0.8);border:1px solid rgba(99,102,241,0.1);border-radius:14px;margin-bottom:12px;overflow:hidden;transition:border-color 0.2s;}
+    .endpoint-card:hover{border-color:rgba(99,102,241,0.25);}
+    .endpoint-header{display:flex;align-items:center;gap:14px;padding:16px 20px;cursor:pointer;user-select:none;}
+    .endpoint-body{display:none;padding:0 20px 20px;border-top:1px solid rgba(99,102,241,0.08);}
+    .endpoint-body.open{display:block;}
+
+    .method{padding:4px 12px;border-radius:6px;font-size:12px;font-weight:700;font-family:'JetBrains Mono',monospace;min-width:70px;text-align:center;}
+    .GET{background:rgba(16,185,129,0.12);color:#6ee7b7;}
+    .POST{background:rgba(59,130,246,0.12);color:#93c5fd;}
+    .PUT{background:rgba(245,158,11,0.12);color:#fcd34d;}
+    .PATCH{background:rgba(139,92,246,0.12);color:#c4b5fd;}
+    .DELETE{background:rgba(239,68,68,0.12);color:#fca5a5;}
+
+    .url{font-family:'JetBrains Mono',monospace;color:#e2e8f0;font-size:14px;}
+    .desc{color:#64748b;font-size:13px;margin-left:auto;}
+
+    pre{background:rgba(7,13,26,0.8);border:1px solid rgba(99,102,241,0.1);border-radius:10px;padding:16px;font-size:12px;overflow-x:auto;color:#94a3b8;line-height:1.6;margin-top:10px;}
+    .key{color:#93c5fd;}
+    .string{color:#6ee7b7;}
+    .number{color:#fcd34d;}
+    .bool{color:#f9a8d4;}
+
+    /* SIMULATOR */
+    .sim-section{background:rgba(10,16,32,0.9);border:1px solid rgba(99,102,241,0.15);border-radius:16px;padding:28px;margin-top:32px;}
+    .sim-input{background:rgba(7,13,26,0.8);border:1px solid rgba(99,102,241,0.18);border-radius:10px;padding:12px 16px;color:#e2e8f0;font-size:13px;font-family:'JetBrains Mono',monospace;outline:none;width:100%;transition:border-color 0.2s;}
+    .sim-input:focus{border-color:rgba(99,102,241,0.45);}
+    .sim-input::placeholder{color:#334155;}
+    .sim-select{background:rgba(7,13,26,0.8);border:1px solid rgba(99,102,241,0.18);border-radius:10px;padding:12px 16px;color:#e2e8f0;font-size:13px;outline:none;cursor:pointer;}
+    .btn-run{background:linear-gradient(135deg,#6366f1,#8b5cf6);color:#fff;padding:12px 24px;border-radius:10px;border:none;font-weight:600;font-size:14px;cursor:pointer;font-family:'Inter',sans-serif;transition:opacity 0.2s;}
+    .btn-run:hover{opacity:0.85;}
+    .response-panel{background:rgba(7,13,26,0.9);border:1px solid rgba(99,102,241,0.1);border-radius:10px;padding:16px;margin-top:16px;min-height:80px;font-family:'JetBrains Mono',monospace;font-size:12px;color:#94a3b8;line-height:1.7;overflow-x:auto;}
+    .status-badge{display:inline-block;padding:3px 10px;border-radius:6px;font-size:11px;font-weight:700;margin-left:8px;}
+    .s-2xx{background:rgba(16,185,129,0.12);color:#6ee7b7;}
+    .s-4xx{background:rgba(239,68,68,0.12);color:#fca5a5;}
+    .s-5xx{background:rgba(245,158,11,0.12);color:#fcd34d;}
+
+    /* STATS CARDS */
+    .stat-card{background:rgba(15,22,40,0.8);border:1px solid rgba(99,102,241,0.1);border-radius:12px;padding:20px;text-align:center;}
+
+    /* POSTMAN GUIDE */
+    .step{display:flex;gap:16px;margin-bottom:20px;align-items:flex-start;}
+    .step-num{background:linear-gradient(135deg,#6366f1,#8b5cf6);color:#fff;border-radius:50%;width:28px;height:28px;display:flex;align-items:center;justify-content:center;font-size:13px;font-weight:700;flex-shrink:0;margin-top:2px;}
+  </style>
+</head>
+<body>
+
+<!-- NAV -->
+<nav>
+  <div class="nav-inner">
+    <span style="font-family:'Space Grotesk',sans-serif;font-weight:800;font-size:18px;color:#f8fafc;">API<span style="color:#6366f1;">Docs</span></span>
+    <div style="display:flex;gap:8px;">
+      <span style="background:rgba(16,185,129,0.1);color:#6ee7b7;padding:4px 12px;border-radius:6px;font-size:11px;font-weight:600;">v1.0</span>
+      <span style="background:rgba(99,102,241,0.1);color:#a5b4fc;padding:4px 12px;border-radius:6px;font-size:11px;font-weight:600;">SaiKet Task 4</span>
+    </div>
+  </div>
+</nav>
+
+<!-- HERO -->
+<div class="hero">
+  <div class="badge">⚡ SaiKet Systems Internship · Task 4 · Node.js + Express</div>
+  <h1 style="font-size:clamp(32px,5vw,56px);font-weight:800;color:#f8fafc;margin-bottom:16px;">REST API<br/><span style="background:linear-gradient(135deg,#6366f1,#a78bfa);-webkit-background-clip:text;-webkit-text-fill-color:transparent;">User Management</span></h1>
+  <p style="color:#475569;font-size:16px;max-width:480px;margin:0 auto 32px;line-height:1.7;">Complete CRUD API with Node.js, Express, JSON handling, validation, and Postman testing.</p>
+  <div style="display:flex;gap:16px;justify-content:center;flex-wrap:wrap;">
+    <code style="background:rgba(15,22,40,0.8);border:1px solid rgba(99,102,241,0.2);border-radius:8px;padding:10px 18px;color:#a5b4fc;font-size:13px;">Base URL: http://localhost:3000</code>
+    <code style="background:rgba(16,185,129,0.08);border:1px solid rgba(16,185,129,0.2);border-radius:8px;padding:10px 18px;color:#6ee7b7;font-size:13px;">GET /api/users</code>
+  </div>
+</div>
+
+<div style="max-width:1000px;margin:auto;padding:48px 24px;">
+
+  <!-- STATS -->
+  <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(160px,1fr));gap:14px;margin-bottom:48px;">
+    <div class="stat-card"><div style="font-size:28px;font-weight:800;color:#6366f1;font-family:'Space Grotesk',sans-serif;">7</div><div style="color:#475569;font-size:12px;margin-top:4px;">API Endpoints</div></div>
+    <div class="stat-card"><div style="font-size:28px;font-weight:800;color:#10b981;font-family:'Space Grotesk',sans-serif;">5</div><div style="color:#475569;font-size:12px;margin-top:4px;">HTTP Methods</div></div>
+    <div class="stat-card"><div style="font-size:28px;font-weight:800;color:#f59e0b;font-family:'Space Grotesk',sans-serif;">CRUD</div><div style="color:#475569;font-size:12px;margin-top:4px;">Operations</div></div>
+    <div class="stat-card"><div style="font-size:28px;font-weight:800;color:#a78bfa;font-family:'Space Grotesk',sans-serif;">JSON</div><div style="color:#475569;font-size:12px;margin-top:4px;">Data Format</div></div>
+  </div>
+
+  <!-- ENDPOINTS -->
+  <h2 style="color:#f8fafc;font-size:22px;margin-bottom:20px;">📋 API Endpoints</h2>
+
+  <!-- GET ALL -->
+  <div class="endpoint-card">
+    <div class="endpoint-header" onclick="toggleEndpoint(this)">
+      <span class="method GET">GET</span>
+      <span class="url">/api/users</span>
+      <span class="desc">Get all users</span>
+      <span style="color:#475569;font-size:18px;margin-left:8px;">⌄</span>
+    </div>
+    <div class="endpoint-body">
+      <p style="color:#64748b;font-size:13px;margin:12px 0 8px;">Returns all users. Supports optional query parameters for filtering.</p>
+      <div style="display:flex;gap:8px;flex-wrap:wrap;margin-bottom:8px;">
+        <code style="background:rgba(99,102,241,0.08);color:#a5b4fc;padding:3px 10px;border-radius:6px;font-size:11px;">?search=annick</code>
+        <code style="background:rgba(99,102,241,0.08);color:#a5b4fc;padding:3px 10px;border-radius:6px;font-size:11px;">?minAge=18</code>
+        <code style="background:rgba(99,102,241,0.08);color:#a5b4fc;padding:3px 10px;border-radius:6px;font-size:11px;">?maxAge=30</code>
+      </div>
+      <pre><span class="key">"success"</span>: <span class="bool">true</span>,
+<span class="key">"count"</span>: <span class="number">3</span>,
+<span class="key">"data"</span>: [
+  {
+    <span class="key">"id"</span>: <span class="number">1</span>,
+    <span class="key">"name"</span>: <span class="string">"IYIZIRE Annick"</span>,
+    <span class="key">"email"</span>: <span class="string">"iyizireanique16@gmail.com"</span>,
+    <span class="key">"age"</span>: <span class="number">20</span>,
+    <span class="key">"createdAt"</span>: <span class="string">"2026-09-15T10:00:00.000Z"</span>
+  }
+]</pre>
+    </div>
+  </div>
+
+  <!-- GET ONE -->
+  <div class="endpoint-card">
+    <div class="endpoint-header" onclick="toggleEndpoint(this)">
+      <span class="method GET">GET</span>
+      <span class="url">/api/users/:id</span>
+      <span class="desc">Get user by ID</span>
+      <span style="color:#475569;font-size:18px;margin-left:8px;">⌄</span>
+    </div>
+    <div class="endpoint-body">
+      <p style="color:#64748b;font-size:13px;margin:12px 0 8px;">Returns a single user. Returns 404 if not found.</p>
+      <pre><span class="key">"success"</span>: <span class="bool">true</span>,
+<span class="key">"data"</span>: {
+  <span class="key">"id"</span>: <span class="number">1</span>,
+  <span class="key">"name"</span>: <span class="string">"IYIZIRE Annick"</span>,
+  <span class="key">"email"</span>: <span class="string">"iyizireanique16@gmail.com"</span>,
+  <span class="key">"age"</span>: <span class="number">20</span>
+}</pre>
+    </div>
+  </div>
+
+  <!-- POST -->
+  <div class="endpoint-card">
+    <div class="endpoint-header" onclick="toggleEndpoint(this)">
+      <span class="method POST">POST</span>
+      <span class="url">/api/users</span>
+      <span class="desc">Create new user</span>
+      <span style="color:#475569;font-size:18px;margin-left:8px;">⌄</span>
+    </div>
+    <div class="endpoint-body">
+      <p style="color:#64748b;font-size:13px;margin:12px 0 8px;">Creates a new user. Validates name, email, and age. Returns 409 if email exists.</p>
+      <p style="color:#94a3b8;font-size:12px;font-weight:600;margin-bottom:6px;">REQUEST BODY:</p>
+      <pre>{
+  <span class="key">"name"</span>: <span class="string">"IYIZIRE Annick"</span>,
+  <span class="key">"email"</span>: <span class="string">"iyizireanique16@gmail.com"</span>,
+  <span class="key">"age"</span>: <span class="number">20</span>
+}</pre>
+      <p style="color:#94a3b8;font-size:12px;font-weight:600;margin:10px 0 6px;">RESPONSE (201 Created):</p>
+      <pre><span class="key">"success"</span>: <span class="bool">true</span>,
+<span class="key">"message"</span>: <span class="string">"User created successfully"</span>,
+<span class="key">"data"</span>: { <span class="key">"id"</span>: <span class="number">4</span>, ... }</pre>
+    </div>
+  </div>
+
+  <!-- PUT -->
+  <div class="endpoint-card">
+    <div class="endpoint-header" onclick="toggleEndpoint(this)">
+      <span class="method PUT">PUT</span>
+      <span class="url">/api/users/:id</span>
+      <span class="desc">Update user (full)</span>
+      <span style="color:#475569;font-size:18px;margin-left:8px;">⌄</span>
+    </div>
+    <div class="endpoint-body">
+      <p style="color:#64748b;font-size:13px;margin:12px 0 8px;">Fully replaces a user's data. All fields required. Returns 404 if not found.</p>
+      <pre><span class="key">"success"</span>: <span class="bool">true</span>,
+<span class="key">"message"</span>: <span class="string">"User updated successfully"</span>,
+<span class="key">"data"</span>: { ... }</pre>
+    </div>
+  </div>
+
+  <!-- PATCH -->
+  <div class="endpoint-card">
+    <div class="endpoint-header" onclick="toggleEndpoint(this)">
+      <span class="method PATCH">PATCH</span>
+      <span class="url">/api/users/:id</span>
+      <span class="desc">Partial update</span>
+      <span style="color:#475569;font-size:18px;margin-left:8px;">⌄</span>
+    </div>
+    <div class="endpoint-body">
+      <p style="color:#64748b;font-size:13px;margin:12px 0 8px;">Updates only the provided fields. Other fields remain unchanged.</p>
+      <pre>{ <span class="key">"age"</span>: <span class="number">21</span> }  <span style="color:#334155;">// Only update age</span></pre>
+    </div>
+  </div>
+
+  <!-- DELETE -->
+  <div class="endpoint-card">
+    <div class="endpoint-header" onclick="toggleEndpoint(this)">
+      <span class="method DELETE">DELETE</span>
+      <span class="url">/api/users/:id</span>
+      <span class="desc">Delete user</span>
+      <span style="color:#475569;font-size:18px;margin-left:8px;">⌄</span>
+    </div>
+    <div class="endpoint-body">
+      <p style="color:#64748b;font-size:13px;margin:12px 0 8px;">Permanently deletes a user. Returns 404 if not found.</p>
+      <pre><span class="key">"success"</span>: <span class="bool">true</span>,
+<span class="key">"message"</span>: <span class="string">"User \"IYIZIRE Annick\" deleted successfully"</span></pre>
+    </div>
+  </div>
+
+  <!-- STATS -->
+  <div class="endpoint-card">
+    <div class="endpoint-header" onclick="toggleEndpoint(this)">
+      <span class="method GET">GET</span>
+      <span class="url">/api/stats</span>
+      <span class="desc">Get user statistics</span>
+      <span style="color:#475569;font-size:18px;margin-left:8px;">⌄</span>
+    </div>
+    <div class="endpoint-body">
+      <pre><span class="key">"totalUsers"</span>: <span class="number">3</span>,
+<span class="key">"averageAge"</span>: <span class="number">28</span>,
+<span class="key">"youngest"</span>: { <span class="key">"name"</span>: <span class="string">"IYIZIRE Annick"</span>, <span class="key">"age"</span>: <span class="number">20</span> },
+<span class="key">"oldest"</span>: { <span class="key">"name"</span>: <span class="string">"Alain Kajangwe"</span>, <span class="key">"age"</span>: <span class="number">35</span> }</pre>
+    </div>
+  </div>
+
+  <!-- API SIMULATOR -->
+  <div class="sim-section" style="margin-top:40px;">
+    <h2 style="color:#f8fafc;font-size:20px;margin-bottom:6px;">🧪 API Simulator</h2>
+    <p style="color:#475569;font-size:13px;margin-bottom:24px;">Test the API directly here — simulates real responses!</p>
+
+    <div style="display:flex;gap:10px;flex-wrap:wrap;margin-bottom:12px;">
+      <select class="sim-select" id="simMethod">
+        <option value="GET">GET</option>
+        <option value="POST">POST</option>
+        <option value="PUT">PUT</option>
+        <option value="PATCH">PATCH</option>
+        <option value="DELETE">DELETE</option>
+      </select>
+      <input class="sim-input" id="simUrl" value="/api/users" placeholder="/api/users" style="flex:1;min-width:200px;"/>
+    </div>
+    <textarea class="sim-input" id="simBody" rows="4" placeholder='Request body (JSON) — for POST/PUT/PATCH:&#10;{&#10;  "name": "IYIZIRE Annick",&#10;  "email": "annick@example.com",&#10;  "age": 20&#10;}' style="resize:vertical;margin-bottom:12px;"></textarea>
+    <button class="btn-run" onclick="runSimulation()">▶ Send Request</button>
+
+    <div style="margin-top:16px;">
+      <div style="display:flex;align-items:center;gap:8px;margin-bottom:8px;">
+        <span style="color:#475569;font-size:12px;font-weight:600;">RESPONSE</span>
+        <span id="statusBadge" class="status-badge" style="display:none;"></span>
+        <span id="responseTime" style="color:#334155;font-size:11px;"></span>
+      </div>
+      <div class="response-panel" id="responsePanel">Click "Send Request" to see the response...</div>
+    </div>
+  </div>
+
+  <!-- POSTMAN GUIDE -->
+  <div style="background:rgba(15,22,40,0.8);border:1px solid rgba(99,102,241,0.1);border-radius:16px;padding:28px;margin-top:32px;">
+    <h2 style="color:#f8fafc;font-size:20px;margin-bottom:6px;">📮 How to Test with Postman</h2>
+    <p style="color:#475569;font-size:13px;margin-bottom:24px;">Follow these steps to test your running API with Postman.</p>
+    <div class="step"><div class="step-num">1</div><div><p style="color:#e2e8f0;font-size:14px;font-weight:500;">Run the server</p><code style="background:rgba(7,13,26,0.8);border:1px solid rgba(99,102,241,0.1);border-radius:6px;padding:6px 12px;color:#a5b4fc;font-size:12px;">npm install && npm start</code></div></div>
+    <div class="step"><div class="step-num">2</div><div><p style="color:#e2e8f0;font-size:14px;font-weight:500;margin-bottom:6px;">Open Postman — Create a new request</p><p style="color:#64748b;font-size:13px;">Set method to GET, URL to <code style="color:#6ee7b7;">http://localhost:3000/api/users</code>, click Send</p></div></div>
+    <div class="step"><div class="step-num">3</div><div><p style="color:#e2e8f0;font-size:14px;font-weight:500;margin-bottom:6px;">Test POST — Create a user</p><p style="color:#64748b;font-size:13px;">Method: POST | URL: /api/users | Body: raw JSON with name, email, age</p></div></div>
+    <div class="step"><div class="step-num">4</div><div><p style="color:#e2e8f0;font-size:14px;font-weight:500;margin-bottom:6px;">Test DELETE — Remove a user</p><p style="color:#64748b;font-size:13px;">Method: DELETE | URL: /api/users/1 | No body needed</p></div></div>
+    <div class="step"><div class="step-num">5</div><div><p style="color:#e2e8f0;font-size:14px;font-weight:500;margin-bottom:6px;">Save your collection</p><p style="color:#64748b;font-size:13px;">Save all requests in a Postman Collection named "SaiKet Task 4 API"</p></div></div>
+  </div>
+
+  <p style="text-align:center;color:#1e293b;font-size:12px;margin-top:40px;">Built with Node.js + Express · SaiKet Systems Internship — Task 4 · IYIZIRE Annick 2026</p>
+</div>
+
+<script>
+// ── TOGGLE ENDPOINTS ──────────────────────────────
+function toggleEndpoint(header) {
+  const body = header.nextElementSibling;
+  const arrow = header.querySelector('span:last-child');
+  const isOpen = body.classList.contains('open');
+  body.classList.toggle('open');
+  arrow.style.transform = isOpen ? '' : 'rotate(180deg)';
+  arrow.style.transition = 'transform 0.2s';
+}
+
+// ── SIMULATED DATABASE ────────────────────────────
+let simUsers = [
+  { id:1, name:"IYIZIRE Annick", email:"iyizireanique16@gmail.com", age:20, createdAt:"2026-09-15T10:00:00.000Z" },
+  { id:2, name:"Rwema Amiable",  email:"rwema@africlouds.rw",       age:30, createdAt:"2026-09-15T10:00:00.000Z" },
+  { id:3, name:"Alain Kajangwe", email:"alain@wiredin.rw",          age:35, createdAt:"2026-09-15T10:00:00.000Z" },
+];
+let nextId = 4;
+
+function validateUser(body) {
+  const errors = [];
+  if (!body.name || body.name.trim().length < 2) errors.push("name must be at least 2 characters");
+  if (!body.email || !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(body.email)) errors.push("valid email is required");
+  if (!body.age || isNaN(body.age) || body.age < 1 || body.age > 120) errors.push("age must be between 1 and 120");
+  return errors;
+}
+
+function runSimulation() {
+  const method = document.getElementById('simMethod').value;
+  const url = document.getElementById('simUrl').value.trim();
+  const bodyText = document.getElementById('simBody').value.trim();
+  const panel = document.getElementById('responsePanel');
+  const badge = document.getElementById('statusBadge');
+  const timeEl = document.getElementById('responseTime');
+
+  const start = Date.now();
+  let response, status;
+
+  try {
+    let body = {};
+    if (bodyText) { try { body = JSON.parse(bodyText); } catch(e) { response = { success: false, message: "Invalid JSON in request body" }; status = 400; } }
+
+    // Route matching
+    const idMatch = url.match(/\/api\/users\/(\d+)/);
+    const id = idMatch ? parseInt(idMatch[1]) : null;
+
+    if (url === '/api/stats' && method === 'GET') {
+      const avg = simUsers.length ? Math.round(simUsers.reduce((s,u)=>s+u.age,0)/simUsers.length) : 0;
+      response = { success: true, data: { totalUsers: simUsers.length, averageAge: avg, youngest: simUsers.reduce((a,b)=>a.age<b.age?a:b,simUsers[0]||{}), oldest: simUsers.reduce((a,b)=>a.age>b.age?a:b,simUsers[0]||{}) } };
+      status = 200;
+    } else if (url === '/api/users' && method === 'GET') {
+      response = { success: true, count: simUsers.length, data: simUsers };
+      status = 200;
+    } else if (id && method === 'GET') {
+      const user = simUsers.find(u => u.id === id);
+      if (!user) { response = { success: false, message: `User with id ${id} not found` }; status = 404; }
+      else { response = { success: true, data: user }; status = 200; }
+    } else if (url === '/api/users' && method === 'POST') {
+      if (!response) {
+        const errors = validateUser(body);
+        if (errors.length) { response = { success: false, errors }; status = 400; }
+        else if (simUsers.find(u => u.email === body.email)) { response = { success: false, message: "Email already exists" }; status = 409; }
+        else { const u = { id: nextId++, ...body, age: parseInt(body.age), createdAt: new Date().toISOString() }; simUsers.push(u); response = { success: true, message: "User created successfully", data: u }; status = 201; }
+      }
+    } else if (id && method === 'PUT') {
+      const idx = simUsers.findIndex(u => u.id === id);
+      if (idx === -1) { response = { success: false, message: `User with id ${id} not found` }; status = 404; }
+      else { const errors = validateUser(body); if (errors.length) { response = { success: false, errors }; status = 400; } else { simUsers[idx] = { ...simUsers[idx], ...body, age: parseInt(body.age), updatedAt: new Date().toISOString() }; response = { success: true, message: "User updated successfully", data: simUsers[idx] }; status = 200; } }
+    } else if (id && method === 'PATCH') {
+      const idx = simUsers.findIndex(u => u.id === id);
+      if (idx === -1) { response = { success: false, message: `User with id ${id} not found` }; status = 404; }
+      else { simUsers[idx] = { ...simUsers[idx], ...body, updatedAt: new Date().toISOString() }; response = { success: true, message: "User partially updated", data: simUsers[idx] }; status = 200; }
+    } else if (id && method === 'DELETE') {
+      const idx = simUsers.findIndex(u => u.id === id);
+      if (idx === -1) { response = { success: false, message: `User with id ${id} not found` }; status = 404; }
+      else { const del = simUsers.splice(idx, 1)[0]; response = { success: true, message: `User "${del.name}" deleted successfully` }; status = 200; }
+    } else {
+      response = { success: false, message: `Route ${method} ${url} not found` }; status = 404;
+    }
+  } catch(e) {
+    response = { success: false, message: "Internal server error" }; status = 500;
+  }
+
+  const elapsed = Date.now() - start + Math.floor(Math.random()*30+10);
+  panel.textContent = JSON.stringify(response, null, 2);
+  badge.style.display = 'inline-block';
+  badge.textContent = status;
+  badge.className = 'status-badge ' + (status < 300 ? 's-2xx' : status < 500 ? 's-4xx' : 's-5xx');
+  timeEl.textContent = `${elapsed}ms`;
+}
+</script>
+</body>
+</html>
